@@ -14,9 +14,25 @@ form.addEventListener('submit', function(event){
         }
 
         const taskItem = document.createElement('li');
-        taskItem.innerText = input;
 
+        const taskName = document.createElement('p');
+        taskName.innerText = input;
+
+        const btnConcludeTask = document.createElement('button');
+        btnConcludeTask.classList.add('conclude-button');
+        btnConcludeTask.innerText = 'Concluir';
+        btnConcludeTask.type = 'button';
+
+        const btnRemoveTask = document.createElement('button');
+        btnRemoveTask.classList.add('remove-task');
+        btnRemoveTask.innerText = 'Exluir';
+        btnRemoveTask.type = 'button';
+
+        taskItem.appendChild(taskName);
+        taskItem.appendChild(btnConcludeTask);
+        taskItem.appendChild(btnRemoveTask);
         taskList.appendChild(taskItem);
+
 
         taskInput.value = '';   
         taskInput.focus();
