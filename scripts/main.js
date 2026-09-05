@@ -23,10 +23,18 @@ form.addEventListener('submit', function(event){
         btnConcludeTask.innerText = 'Concluir';
         btnConcludeTask.type = 'button';
 
+        btnConcludeTask.addEventListener('click', function(){
+            taskItem.classList.toggle('completed');
+        });
+
         const btnRemoveTask = document.createElement('button');
         btnRemoveTask.classList.add('remove-task');
-        btnRemoveTask.innerText = 'Exluir';
+        btnRemoveTask.innerText = 'Excluir';
         btnRemoveTask.type = 'button';
+
+        btnRemoveTask.addEventListener('click', function(){
+            taskItem.remove();
+        });
 
         taskItem.appendChild(taskName);
         taskItem.appendChild(btnConcludeTask);
