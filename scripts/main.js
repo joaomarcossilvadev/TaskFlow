@@ -1,10 +1,13 @@
 const form = document.querySelector('#task-form');
 const taskInput = document.querySelector('#task-input');
 const taskList = document.querySelector('#task-list');
+
 const timerDisplay = document.querySelector('#timer-display');
 const btnStartTimer = document.querySelector('#btn-start-timer');
 const btnPauseTimer = document.querySelector('#btn-pause-timer');
 const btnResetTimer = document.querySelector('#btn-reset-timer');
+
+const taskActual = document.querySelector('#task-actual');
 
 let seconds = 0;
 let timer = null;
@@ -37,13 +40,33 @@ form.addEventListener('submit', function(event){
         const taskName = document.createElement('p');
         taskName.innerText = input;
 
+        const btnFocusTask = document.createElement('button');
+        btnFocusTask.classList.add('focus-task');
+        btnFocusTask.innerText = 'Focar';
+        btnFocusTask.type = 'button';
+        
+        btnFocusTask.addEventListener('click', function(){
+            taskActual.textContent = taskName.textContent;
+        });
+
         const btnConcludeTask = document.createElement('button');
         btnConcludeTask.classList.add('conclude-button');
         btnConcludeTask.innerText = 'Concluir';
         btnConcludeTask.type = 'button';
 
         btnConcludeTask.addEventListener('click', function(){
+            if(taskActual.textContent === taskName.textContent){
+                taskActual.textContent = 'Nenhuma tarefa selecionada';
+            }
+            
             taskItem.classList.toggle('completed');
+
+            if(taskItem.classList.contains("completed")){
+                btnFocusTask.disabled = true;
+            } else {
+                btnFocusTask.disabled = false;
+            }
+        
         });
 
         const btnRemoveTask = document.createElement('button');
@@ -52,10 +75,15 @@ form.addEventListener('submit', function(event){
         btnRemoveTask.type = 'button';
 
         btnRemoveTask.addEventListener('click', function(){
+            if(taskActual.textContent === taskName.textContent){
+                taskActual.textContent = 'Nenhuma tarefa selecionada';
+            }
+
             taskItem.remove();
         });
-
+        
         taskItem.appendChild(taskName);
+        taskItem.appendChild(btnFocusTask);
         taskItem.appendChild(btnConcludeTask);
         taskItem.appendChild(btnRemoveTask);
         taskList.appendChild(taskItem);
