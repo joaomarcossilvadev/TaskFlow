@@ -8,7 +8,6 @@ const btnPauseTimer = document.querySelector('#btn-pause-timer');
 const btnResetTimer = document.querySelector('#btn-reset-timer');
 
 const taskActual = document.querySelector('#task-actual');
-
 const toastMessage = document.querySelector('#toast-message');
 
 let seconds = 0;
@@ -118,17 +117,36 @@ form.addEventListener('submit', function(event){
         taskInput.focus();
 
     } catch(error) {
-        console.error(error.message);
+        toastMessage.textContent = error.message;
+
+        setTimeout(function(){
+            toastMessage.textContent = '';
+        }, 3000);
     }
 });
 
 btnStartTimer.addEventListener('click', function(){
-    if(timer !== null) return;
+    try {
+        if(timer !== null){
+            return;
+        }
 
-    timer = setInterval(function(){
-        seconds++;
-        timerDisplay.textContent = formatTime(seconds);
-    }, 1000);
+        if(taskActual.textContent === 'Nenhuma tarefa selecionada'){
+            throw new Error('Selecione uma tarefa antes de iniciar o timer.');
+        }
+
+        timer = setInterval(function(){
+            seconds++;
+            timerDisplay.textContent = formatTime(seconds);
+        }, 1000);
+
+    } catch(error) {
+        toastMessage.textContent = error.message;
+
+        setTimeout(function(){
+            toastMessage.textContent = '';
+        }, 3000);
+    }
 });
 
 btnPauseTimer.addEventListener('click', function(){
