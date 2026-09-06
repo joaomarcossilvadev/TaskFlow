@@ -9,6 +9,8 @@ const btnResetTimer = document.querySelector('#btn-reset-timer');
 
 const taskActual = document.querySelector('#task-actual');
 
+const toastMessage = document.querySelector('#toast-message');
+
 let seconds = 0;
 let timer = null;
 
@@ -63,10 +65,15 @@ form.addEventListener('submit', function(event){
 
             if(taskItem.classList.contains("completed")){
                 btnFocusTask.disabled = true;
+                toastMessage.textContent = 'Tarefa concluida com sucesso!';
+    
+                setTimeout(function(){
+                    toastMessage.textContent = '';
+                }, 3000);
             } else {
                 btnFocusTask.disabled = false;
             }
-        
+
         });
 
         const btnRemoveTask = document.createElement('button');
