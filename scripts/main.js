@@ -32,9 +32,27 @@ form.addEventListener('submit', function(event){
     const input = taskInput.value.trim();
 
     try {
-
         if(input === '') {
             throw new Error('Nome da tarefa é um campo obrigatório');
+        }
+
+        if(input.length < 3){
+            throw new Error('O nome da tarefa deve ter pelo menos 3 letras.');
+        }
+
+        let taskExists = false;
+
+        const taskNames = taskList.querySelectorAll('p');
+
+        for(const taskName of taskNames){
+            if(taskName.textContent.toLowerCase() === input.toLowerCase()){
+                taskExists = true;
+                break;
+            }
+        }
+
+        if(taskExists){
+            throw new Error('Essa tarefa já existe.');
         }
 
         const taskItem = document.createElement('li');
@@ -46,7 +64,7 @@ form.addEventListener('submit', function(event){
         btnFocusTask.classList.add('focus-task');
         btnFocusTask.innerText = 'Focar';
         btnFocusTask.type = 'button';
-        
+
         btnFocusTask.addEventListener('click', function(){
             taskActual.textContent = taskName.textContent;
         });
@@ -60,20 +78,20 @@ form.addEventListener('submit', function(event){
             if(taskActual.textContent === taskName.textContent){
                 taskActual.textContent = 'Nenhuma tarefa selecionada';
             }
-            
+
             taskItem.classList.toggle('completed');
 
-            if(taskItem.classList.contains("completed")){
+            if(taskItem.classList.contains('completed')){
                 btnFocusTask.disabled = true;
-                toastMessage.textContent = 'Tarefa concluida com sucesso!';
-    
+
+                toastMessage.textContent = 'Tarefa concluída com sucesso!';
+
                 setTimeout(function(){
                     toastMessage.textContent = '';
                 }, 3000);
             } else {
                 btnFocusTask.disabled = false;
             }
-
         });
 
         const btnRemoveTask = document.createElement('button');
@@ -88,15 +106,15 @@ form.addEventListener('submit', function(event){
 
             taskItem.remove();
         });
-        
+
         taskItem.appendChild(taskName);
         taskItem.appendChild(btnFocusTask);
         taskItem.appendChild(btnConcludeTask);
         taskItem.appendChild(btnRemoveTask);
+
         taskList.appendChild(taskItem);
 
-
-        taskInput.value = '';   
+        taskInput.value = '';
         taskInput.focus();
 
     } catch(error) {
@@ -116,12 +134,15 @@ btnStartTimer.addEventListener('click', function(){
 btnPauseTimer.addEventListener('click', function(){
     clearInterval(timer);
     timer = null;
+
     timerDisplay.textContent = formatTime(seconds);
 });
 
 btnResetTimer.addEventListener('click', function(){
     clearInterval(timer);
+
     timer = null;
     seconds = 0;
+
     timerDisplay.textContent = '00:00:00';
 });
