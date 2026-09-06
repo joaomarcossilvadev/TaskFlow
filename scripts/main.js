@@ -10,8 +10,13 @@ const btnResetTimer = document.querySelector('#btn-reset-timer');
 const taskActual = document.querySelector('#task-actual');
 const toastMessage = document.querySelector('#toast-message');
 
+const filterAll = document.querySelector('#filter-all');
+const filterPending = document.querySelector('#filter-pending');
+const filterCompleted = document.querySelector('#filter-completed');
+
 let timer = null;
 let currentTaskId = null;
+let currentFilter = 'all';
 
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
@@ -68,10 +73,28 @@ function clearCurrentTask() {
     timerDisplay.textContent = '00:00:00';
 }
 
+function getFilteredTasks() {
+    if(currentFilter === 'pending') {
+        return tasks.filter(function(task) {
+            return task.completed === false;
+        });
+    }
+
+    if(currentFilter === 'completed') {
+        return tasks.filter(function(task) {
+            return task.completed === true;
+        });
+    }
+
+    return tasks;
+}
+
 function renderTasks() {
     taskList.innerHTML = '';
 
-    tasks.forEach(function(task) {
+    const filteredTasks = getFilteredTasks();
+
+    filteredTasks.forEach(function(task) {
         const taskItem = document.createElement('li');
 
         const taskName = document.createElement('p');
@@ -98,6 +121,7 @@ function renderTasks() {
         if(task.completed) {
             taskItem.classList.add('completed');
             btnFocusTask.disabled = true;
+            btnConcludeTask.textContent = 'Reabrir';
         }
 
         if(task.id === currentTaskId) {
@@ -124,6 +148,8 @@ function renderTasks() {
                 }
 
                 showMessage('Tarefa concluída com sucesso!');
+            } else {
+                showMessage('Tarefa reaberta.');
             }
 
             saveTasks();
@@ -164,17 +190,14 @@ form.addEventListener('submit', function(event) {
         }
 
         if(input.length < 3) {
-            throw new Error('O nome da tarefa deve ter pelo menos 3 letras.');
+            throw new Error(
+                'O nome da tarefa deve ter pelo menos 3 letras.'
+            );
         }
 
-        let taskExists = false;
-
-        for(const task of tasks) {
-            if(task.title.toLowerCase() === input.toLowerCase()) {
-                taskExists = true;
-                break;
-            }
-        }
+        const taskExists = tasks.some(function(task) {
+            return task.title.toLowerCase() === input.toLowerCase();
+        });
 
         if(taskExists) {
             throw new Error('Essa tarefa já existe.');
@@ -257,6 +280,21 @@ btnResetTimer.addEventListener('click', function() {
     } catch(error) {
         showMessage(error.message);
     }
+});
+
+filterAll.addEventListener('click', function() {
+    currentFilter = 'all';
+    renderTasks();
+});
+
+filterPending.addEventListener('click', function() {
+    currentFilter = 'pending';
+    renderTasks();
+});
+
+filterCompleted.addEventListener('click', function() {
+    currentFilter = 'completed';
+    renderTasks();
 });
 
 saveTasks();
