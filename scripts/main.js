@@ -10,10 +10,21 @@ const btnResetTimer = document.querySelector('#btn-reset-timer');
 const taskActual = document.querySelector('#task-actual');
 const toastMessage = document.querySelector('#toast-message');
 
-let seconds = 0;
 let timer = null;
+let currentTaskId = null;
 
-function formatTime(seconds){
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+tasks = tasks.map(function(task, index) {
+    return {
+        id: task.id || Date.now() + index,
+        title: task.title,
+        completed: task.completed || false,
+        timeSpent: task.timeSpent || 0
+    };
+});
+
+function formatTime(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = seconds % 60;
@@ -25,142 +36,228 @@ function formatTime(seconds){
     return `${hh}:${mm}:${ss}`;
 }
 
-form.addEventListener('submit', function(event){
+function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+function showMessage(message) {
+    toastMessage.textContent = message;
+
+    setTimeout(function() {
+        toastMessage.textContent = '';
+    }, 3000);
+}
+
+function getCurrentTask() {
+    return tasks.find(function(task) {
+        return task.id === currentTaskId;
+    });
+}
+
+function stopTimer() {
+    clearInterval(timer);
+    timer = null;
+}
+
+function clearCurrentTask() {
+    stopTimer();
+
+    currentTaskId = null;
+
+    taskActual.textContent = 'Nenhuma tarefa selecionada';
+    timerDisplay.textContent = '00:00:00';
+}
+
+function renderTasks() {
+    taskList.innerHTML = '';
+
+    tasks.forEach(function(task) {
+        const taskItem = document.createElement('li');
+
+        const taskName = document.createElement('p');
+        taskName.textContent = task.title;
+
+        const taskTime = document.createElement('span');
+        taskTime.textContent = `Tempo: ${formatTime(task.timeSpent)}`;
+
+        const btnFocusTask = document.createElement('button');
+        btnFocusTask.classList.add('focus-task');
+        btnFocusTask.textContent = 'Focar';
+        btnFocusTask.type = 'button';
+
+        const btnConcludeTask = document.createElement('button');
+        btnConcludeTask.classList.add('conclude-button');
+        btnConcludeTask.textContent = 'Concluir';
+        btnConcludeTask.type = 'button';
+
+        const btnRemoveTask = document.createElement('button');
+        btnRemoveTask.classList.add('remove-task');
+        btnRemoveTask.textContent = 'Excluir';
+        btnRemoveTask.type = 'button';
+
+        if(task.completed) {
+            taskItem.classList.add('completed');
+            btnFocusTask.disabled = true;
+        }
+
+        if(task.id === currentTaskId) {
+            taskItem.classList.add('focused');
+        }
+
+        btnFocusTask.addEventListener('click', function() {
+            stopTimer();
+
+            currentTaskId = task.id;
+
+            taskActual.textContent = task.title;
+            timerDisplay.textContent = formatTime(task.timeSpent);
+
+            renderTasks();
+        });
+
+        btnConcludeTask.addEventListener('click', function() {
+            task.completed = !task.completed;
+
+            if(task.completed) {
+                if(currentTaskId === task.id) {
+                    clearCurrentTask();
+                }
+
+                showMessage('Tarefa concluída com sucesso!');
+            }
+
+            saveTasks();
+            renderTasks();
+        });
+
+        btnRemoveTask.addEventListener('click', function() {
+            if(currentTaskId === task.id) {
+                clearCurrentTask();
+            }
+
+            tasks = tasks.filter(function(taskItem) {
+                return taskItem.id !== task.id;
+            });
+
+            saveTasks();
+            renderTasks();
+        });
+
+        taskItem.appendChild(taskName);
+        taskItem.appendChild(taskTime);
+        taskItem.appendChild(btnFocusTask);
+        taskItem.appendChild(btnConcludeTask);
+        taskItem.appendChild(btnRemoveTask);
+
+        taskList.appendChild(taskItem);
+    });
+}
+
+form.addEventListener('submit', function(event) {
     event.preventDefault();
 
     const input = taskInput.value.trim();
 
     try {
         if(input === '') {
-            throw new Error('Nome da tarefa é um campo obrigatório');
+            throw new Error('Nome da tarefa é um campo obrigatório.');
         }
 
-        if(input.length < 3){
+        if(input.length < 3) {
             throw new Error('O nome da tarefa deve ter pelo menos 3 letras.');
         }
 
         let taskExists = false;
 
-        const taskNames = taskList.querySelectorAll('p');
-
-        for(const taskName of taskNames){
-            if(taskName.textContent.toLowerCase() === input.toLowerCase()){
+        for(const task of tasks) {
+            if(task.title.toLowerCase() === input.toLowerCase()) {
                 taskExists = true;
                 break;
             }
         }
 
-        if(taskExists){
+        if(taskExists) {
             throw new Error('Essa tarefa já existe.');
         }
 
-        const taskItem = document.createElement('li');
+        const newTask = {
+            id: Date.now(),
+            title: input,
+            completed: false,
+            timeSpent: 0
+        };
 
-        const taskName = document.createElement('p');
-        taskName.innerText = input;
+        tasks.push(newTask);
 
-        const btnFocusTask = document.createElement('button');
-        btnFocusTask.classList.add('focus-task');
-        btnFocusTask.innerText = 'Focar';
-        btnFocusTask.type = 'button';
-
-        btnFocusTask.addEventListener('click', function(){
-            taskActual.textContent = taskName.textContent;
-        });
-
-        const btnConcludeTask = document.createElement('button');
-        btnConcludeTask.classList.add('conclude-button');
-        btnConcludeTask.innerText = 'Concluir';
-        btnConcludeTask.type = 'button';
-
-        btnConcludeTask.addEventListener('click', function(){
-            if(taskActual.textContent === taskName.textContent){
-                taskActual.textContent = 'Nenhuma tarefa selecionada';
-            }
-
-            taskItem.classList.toggle('completed');
-
-            if(taskItem.classList.contains('completed')){
-                btnFocusTask.disabled = true;
-
-                toastMessage.textContent = 'Tarefa concluída com sucesso!';
-
-                setTimeout(function(){
-                    toastMessage.textContent = '';
-                }, 3000);
-            } else {
-                btnFocusTask.disabled = false;
-            }
-        });
-
-        const btnRemoveTask = document.createElement('button');
-        btnRemoveTask.classList.add('remove-task');
-        btnRemoveTask.innerText = 'Excluir';
-        btnRemoveTask.type = 'button';
-
-        btnRemoveTask.addEventListener('click', function(){
-            if(taskActual.textContent === taskName.textContent){
-                taskActual.textContent = 'Nenhuma tarefa selecionada';
-            }
-
-            taskItem.remove();
-        });
-
-        taskItem.appendChild(taskName);
-        taskItem.appendChild(btnFocusTask);
-        taskItem.appendChild(btnConcludeTask);
-        taskItem.appendChild(btnRemoveTask);
-
-        taskList.appendChild(taskItem);
+        saveTasks();
+        renderTasks();
 
         taskInput.value = '';
         taskInput.focus();
 
     } catch(error) {
-        toastMessage.textContent = error.message;
-
-        setTimeout(function(){
-            toastMessage.textContent = '';
-        }, 3000);
+        showMessage(error.message);
     }
 });
 
-btnStartTimer.addEventListener('click', function(){
+btnStartTimer.addEventListener('click', function() {
     try {
-        if(timer !== null){
+        if(timer !== null) {
             return;
         }
 
-        if(taskActual.textContent === 'Nenhuma tarefa selecionada'){
-            throw new Error('Selecione uma tarefa antes de iniciar o timer.');
+        const currentTask = getCurrentTask();
+
+        if(!currentTask) {
+            throw new Error(
+                'Selecione uma tarefa antes de iniciar o timer.'
+            );
         }
 
-        timer = setInterval(function(){
-            seconds++;
-            timerDisplay.textContent = formatTime(seconds);
+        timer = setInterval(function() {
+            currentTask.timeSpent++;
+
+            timerDisplay.textContent = formatTime(
+                currentTask.timeSpent
+            );
+
+            saveTasks();
+            renderTasks();
         }, 1000);
 
     } catch(error) {
-        toastMessage.textContent = error.message;
-
-        setTimeout(function(){
-            toastMessage.textContent = '';
-        }, 3000);
+        showMessage(error.message);
     }
 });
 
-btnPauseTimer.addEventListener('click', function(){
-    clearInterval(timer);
-    timer = null;
-
-    timerDisplay.textContent = formatTime(seconds);
+btnPauseTimer.addEventListener('click', function() {
+    stopTimer();
+    saveTasks();
 });
 
-btnResetTimer.addEventListener('click', function(){
-    clearInterval(timer);
+btnResetTimer.addEventListener('click', function() {
+    try {
+        const currentTask = getCurrentTask();
 
-    timer = null;
-    seconds = 0;
+        if(!currentTask) {
+            throw new Error(
+                'Selecione uma tarefa antes de zerar o timer.'
+            );
+        }
 
-    timerDisplay.textContent = '00:00:00';
+        stopTimer();
+
+        currentTask.timeSpent = 0;
+
+        timerDisplay.textContent = '00:00:00';
+
+        saveTasks();
+        renderTasks();
+
+    } catch(error) {
+        showMessage(error.message);
+    }
 });
+
+saveTasks();
+renderTasks();
